@@ -1,0 +1,74 @@
+\documentclass{scrreprt}
+\usepackage{lmodern}
+\author{Andreas Schachner}
+\title{Dokumentation zum Uni-Heidelberg-App-Projekt}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel} 
+\usepackage[automark,headsepline,plainheadsepline]{scrpage2}
+\usepackage{endnotes}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=blue}
+\setcounter{tocdepth}{2}
+\pagestyle{scrheadings}
+\ihead[\rightmark]{\rightmark} \chead[\pagemark]{}
+\usepackage{pst-all}
+\input{include/code_listing}
+
+
+\begin{document}
+
+\maketitle
+\newpage
+\setcounter{page}{1}
+\tableofcontents
+\newpage
+\definecolor{light-gray}{gray}{0.85}
+
+\chapter{Einleitung}
+
+\section{Einführung}
+
+Im Sommersemester 2014 haben wir, ein Team von 5 Studenten aus dem Bereich Physik und Informatik, uns dazu entschlossen eine App für iOS-Geräte zu entwickeln, die den studentischen Alltag und natürlich auch die Informationsweitergabe innerhalb der \emph{Fakultät für Physik und Astronomie} vereinfacht. Wir haben uns nach einem gemeinsamen Kurs, namentlich \emph{"Softwareentwicklung für iOS mit Objective-C und Xcode"} unter der Leitung von \emph{Nils Fischer}, zusammengefunden und gemeinsam mit \emph{Prof. Dr. Peter Fischer} ein Konzept zur Durchführung des oben angesprochenen Projekts erarbeitet. In der derzeitigen Entwicklung haben wir uns auf drei verschiedene Hauptabschnitte geeinigt: Zunächst haben wir eine zusammenfassende Dartsellung von News und Events in einem gemeinsamen Segment erstellt, in dem der Benutzer einerseits durch Auswählen von Quellen, wie "Allgemeines der Universität" oder "Fakultät für Physik und Atronomie", die für sich selbst interessanten Daten filtern und andererseits durch die dirkete Verknüpfung mit anderen Apps, wie "Kalender" oder "E-Mail", Informationen gezielt speichern und weitergeben kann. Weiterhin werden in einem zweiten Segement die täglichen Gerichte sowie Menüs der verschiedenen Mensen der Uniersität Heidelberg abrufbar sein. Dort können ebenfalls die Öffnungszeiten abgerufen sowie unterschiedliche Gerichte favorisiert werden. Dies soll dem Benutzer die Auswahl des Mittagessens an einem bestimmten Tag erleichtern. Zuletzt wird in einem dritten Teil die Universität mit allen Gebäuden und den zugehörigen Informationen dargestellt. Dieser letzte Punkt wird im Folgenenden den größten Teil meiner eigenen Aufgaben sein.
+
+\section{Eigene Aufgaben}
+
+Im Laufe des Semesters habe ich selbst in der Erstellung des Data Models für News und Events mitgewirkt. Weiterhin habe ich die \texttt{UIWebView} bearbeitet, welche die News und Events, deren URLs aus einem eigenen Server geladen werden, welcher ebenfalls von uns programmiert wurde, darstellt. Dabei musste ich die richtige Darstellung der einzelnen Websites auf dem iPhone sowie das Scrollen und Zoomen implementieren. Ebenso habe ich dort den \emph{Share-Button} konzipiert, welcher das teilen eines News- oder Eventitems mit einer anderen App ermöglicht. Meine eigentliche Aufgabe besteht nunmehr darin die geographische Darstellung der Universität Heidelberg in unserer App in Zusammenhang mit wichtigen Inforamtionen abrufbar zu machen. Dies wird im Folgenden detaillierter dargestellt, da dort der größte Zeitaufwand mit verbunden war.
+
+
+
+
+
+\newpage
+\chapter{Implementierung}
+
+\section{Data Model}
+
+\subsection{Beschreibung}
+
+\begin{figure}[ht]
+\centering \rotatebox{0}{\includegraphics[scale=0.6]{DataModel.png}}
+\caption{Data Model der Maps}
+\end{figure}
+
+Zunächst sollen die Gebäude in einer Klasse dargestellt werden. Dazu benötigt man eine \textsf{UHDRemoteManagedLocation} \textbf{GENAUER?!}. Diese ordnet jedem Gebäude verschiedene Eigenschaften, wie Ort oder Titel zu. Die Gebäude selbst werden in der Klasse \textsf{UHDBuilding} implementiert. Dazu wird jedem Objekt der Klasse ein \textsf{buildingIdentifier} übergeben, welcher den Titel richtig zusammensetzt. Dies liegt darin begründet, dass beispielsweise Gebäude im Neuenheimer Feld alle den Zusatz \emph{INF} tragen, sodass dem Gebäude nur eine \textsf{buildingNumber} zugeordnet werden muss. Der eigentliche \textsf{title} des Gebäudes setzt sich dann aus beiden Teilen zusammen, was aufgrund der überschriebenen Getter-Methode des \textsf{buildingIdentifier} geschieht. Um eine solche Charakterisierung der Gebäude zu erhalten, muss jedem Gebäude eine Region in Heidelberg zugeordnet werden. Dazu wird eine weitere Klasse \textsf{UHDCampusRegion} erstellt, die jedem Gebäude eine solche \textsf{region} zuorndet. Um weiterhin zwischen Gebäuden verschiedener Fakultäten oder auch Verwaltungsgebäuden zu unterscheiden, wird eine weitere Klasse \textsf{UHDLocationCategory} erstellt, die jedem Objekt der Klasse \textsf{UHDBuilding} eine \textsf{category} zuordnet.
+
+\subsection{Implementierungsdateien}
+
+\begin{objclst}
+
+\end{objclst}
+
+
+\section{Darstellung der verschiedenen Views}
+
+Im \textsf{NavigationViewController} kann über den Button \textsf{Campus} die Anzeige der \textsf{MapView} erreicht werden. Dort gibt es zunächst die Option die Karte in verschiedenen Ansichten darzustellen. Es gibt die Wahl zwischen \textsf{Map}, was die Standardarstellung auf der Karte in iOS ist, \textsf{Satellite} oder \textsf{OVERLAY} \textbf{NACHTRAGEN}. In den ersten beiden Optionen werden die einzelnen Gebäude durch Stecknadeln dargestellt. Durch die Auswahl einer solchen Stecknadel erhält man zunächst grundlegende Informationen, wie den Titel, in einer Art Sprechblase angezeigt. Das Tappen auf diese Sprechblase öffnet ein neues Fenester, welches alle Informationen zum Gebäude anzeigt. Die dritte Kartendarstellung ist ein wenig aufwendiger zu implementieren, denn diese ist keine von Apple vorgefertigte Anzeigeoption. Stattdessen wurde dazu aus verschiedenen PDFs der Universität, welches die Gebäude mit Namen anzeigt, benutzt, um ein sogenanntes \emph{Overlay} zu erzeugen. Das heißt über die \textsf{MapView} wurde das PDF gelegt und dort die Koordinaten an bestimmten Fixpunkten eingetragen. Wir haben uns für diese zusätzliche Darstellung entschieden, da sie dem Benutzer einen viel besseren Überblick über die Gebäude der Universität liefert, als die eigentliche Karte in iOS. 
+
+
+\section{Implementierung der View Controller}
+
+
+\newpage
+\chapter{Zusammenfassung}
+
+\end{document}

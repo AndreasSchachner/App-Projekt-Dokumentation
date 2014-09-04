@@ -1,0 +1,11 @@
+\select@language {ngerman}
+\contentsline {chapter}{\numberline {1}Einleitung}{2}{chapter.1}
+\contentsline {section}{\numberline {1.1}Einführung}{2}{section.1.1}
+\contentsline {section}{\numberline {1.2}Eigene Aufgaben}{2}{section.1.2}
+\contentsline {chapter}{\numberline {2}Implementierung}{3}{chapter.2}
+\contentsline {section}{\numberline {2.1}Data Model}{3}{section.2.1}
+\contentsline {subsection}{\numberline {2.1.1}Beschreibung}{3}{subsection.2.1.1}
+\contentsline {subsection}{\numberline {2.1.2}Implementierungsdateien}{4}{subsection.2.1.2}
+\contentsline {section}{\numberline {2.2}Darstellung der verschiedenen Views}{4}{section.2.2}
+\contentsline {section}{\numberline {2.3}Implementierung der View Controller}{4}{section.2.3}
+\contentsline {chapter}{\numberline {3}Zusammenfassung}{5}{chapter.3}

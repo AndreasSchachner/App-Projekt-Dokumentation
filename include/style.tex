@@ -1,0 +1,90 @@
+
+% General Packages
+\usepackage[ngerman]{babel}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+% PDF Meta Info
+\makeatletter
+\AtBeginDocument{
+  \hypersetup{
+    pdftitle = {\@title{} \@subtitle},
+    pdfauthor = {\@author}
+  }
+}
+\makeatother
+
+
+% Page Layout
+%\pagestyle{headings}
+\usepackage[textheight=640pt]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\AtBeginDocument{
+\fancyhf{}
+\lhead{\textit{Nils Fischer, Universität Heidelberg, \shortsemester}}
+\rhead{\textit{\shortdoctype{} \nouppercase{\leftmark}}}
+\renewcommand{\headrulewidth}{0.2pt}
+\cfoot{\thepage}
+}
+
+% Font
+\usepackage{fontspec}
+\usepackage{xunicode}
+
+% Headings
+\usepackage[bf]{titlesec}
+%\titleformat{\chapter}[display]{\large\bfseries}{\chaptertitlename\ \thechapter}{5pt}{\large}% NEW
+%\titlespacing*{\chapter}{0pt}{30pt}{20pt}% NEW
+
+
+% Menukeys
+\usepackage{menukeys}
+\newcommand\cmdkey{{\cmd}}
+\newcommand\shiftkey{{\shift}}
+\newcommand\altkey{{\Alt}}
+\newcommand\ctrlkey{{\ctrl}}
+\newcommand\tabkey{{\tab}}
+
+% Style
+\newcommand\strong\textbf
+\newenvironment{filecontent}[1]{\textbf{#1}}{}
+
+% References
+\newcommand{\linkref}[1]{[\footnote{\url{#1}}]}
+\newcommand{\abbref}[1]{\emph{(\hyperref[#1]{s. S. \pageref{#1}, Abb. \ref{#1}})}}
+\newcommand{\secref}[1]{\emph{(\hyperref[#1]{s. S. \pageref{#1}, Abschnitt \ref{#1}})}}
+\newcommand{\excref}[1]{\emph{(\hyperref[#1]{s. S. \pageref{#1}, Übungsaufgabe \ref{#1}})}}
+\newcommand{\skriptref}[1]{\emph{Relevante Kapitel im Skript: #1}}
+
+% Images
+\newcommand{\includegraphicsc}[4][\textwidth]{{\begin{figure}[ht]\centering\includegraphics[width=#1]{#2}\caption{#4}\label{#3}\end{figure}}}
+\newcommand{\screenshotwidth}{.8\textwidth}
+\newcommand{\iphonewidth}{.4\textwidth}
+
+% Margin Images
+\usepackage{marginnote}
+\newcommand{\mvcindicatorview}{\reversemarginpar\marginnote{\centering
+    \includegraphics[width=1cm]{img/mvc_view}\\
+    \textbf{\small View}
+}}
+\newcommand{\mvcindicatorcontroller}{\reversemarginpar\marginnote{\centering
+    \includegraphics[width=1cm]{img/mvc_controller}\\
+    \textbf{\small Controller}
+}}
+
+% Lecture structure
+\newenvironment{lecture}{}{\pagebreak}
+
+% Exercise Style
+\newcounter{exc}
+\newenvironment{exc}{\subsubsection{Übungsaufgaben}\begin{enumerate}\setcounter{enumi}{\theexc}}{\setcounter{exc}{\theenumi}\end{enumerate}}
+\newenvironment{excitem}[2]{\item\label{exc:#1}\strong{#2}}{}
+\newcommand{\excextra}[1]{\strong{Extra:} #1}
+\newcommand{\exchinweis}[1]{\strong{Hinweis:} #1}
+\newenvironment{exchinweise}{\strong{Hinweise:}\begin{itemize}}{\end{itemize}}
+%\newenvironment{lsg}{\begin{enumerate}}{\end{enumerate}}
+\newenvironment{lsg}{}{}
+%\newenvironment{lsgitem}[2]{\item\label{lsg:#1}\addcontentsline{toc}{chapter}{\theenumi. #2}\strong{#2}}{}
+\newenvironment{lsgitem}[2]{\label{lsg:#1}\section{#2}}{}
