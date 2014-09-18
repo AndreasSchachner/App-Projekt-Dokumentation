@@ -1,23 +1,36 @@
-\documentclass{scrreprt}
+\documentclass{report}
 \usepackage{lmodern}
 \author{Andreas Schachner}
 \title{Dokumentation zum Uni-Heidelberg-App-Projekt}
+\usepackage[top=3cm, bottom=3cm, inner=3.5cm, outer=3cm]{geometry}
 \usepackage[T1]{fontenc}
+\usepackage{amssymb}
+\usepackage{pifont} 
+\usepackage{longtable} 
+\usepackage{tabularx} 
+\usepackage{graphicx} 
+\usepackage{amsmath}
 \usepackage[ngerman]{babel} 
 \usepackage[automark,headsepline,plainheadsepline]{scrpage2}
 \usepackage{endnotes}
 \usepackage{csquotes}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,urlcolor=blue,linkcolor=blue}
+\usepackage{relsize}
+\usepackage{xcolor}
+\usepackage{soul}
+\usepackage{endnotes}
 \setcounter{tocdepth}{2}
 \pagestyle{scrheadings}
 \ihead[\rightmark]{\rightmark} \chead[\pagemark]{}
 \usepackage{pst-all}
+\usepackage{blindtext}
 \input{include/code_listing}
 
 
 \begin{document}
 
+\definecolor{light-gray}{gray}{0.85}
 \maketitle
 \newpage
 \setcounter{page}{1}
@@ -46,26 +59,144 @@ Im Laufe des Semesters habe ich selbst in der Erstellung des Data Models für Ne
 
 \subsection{Beschreibung}
 
-\begin{figure}[ht]
-\centering \rotatebox{0}{\includegraphics[scale=0.6]{DataModel.png}}
+
+\begin{figure}[ht]\label{bild_1}
+\centering \rotatebox{0}{\includegraphics[scale=0.6]{Bilder/DataModel.png}}
 \caption{Data Model der Maps}
 \end{figure}
 
-Zunächst sollen die Gebäude in einer Klasse dargestellt werden. Dazu benötigt man eine \textsf{UHDRemoteManagedLocation} \textbf{GENAUER?!}. Diese ordnet jedem Gebäude verschiedene Eigenschaften, wie Ort oder Titel zu. Die Gebäude selbst werden in der Klasse \textsf{UHDBuilding} implementiert. Dazu wird jedem Objekt der Klasse ein \textsf{buildingIdentifier} übergeben, welcher den Titel richtig zusammensetzt. Dies liegt darin begründet, dass beispielsweise Gebäude im Neuenheimer Feld alle den Zusatz \emph{INF} tragen, sodass dem Gebäude nur eine \textsf{buildingNumber} zugeordnet werden muss. Der eigentliche \textsf{title} des Gebäudes setzt sich dann aus beiden Teilen zusammen, was aufgrund der überschriebenen Getter-Methode des \textsf{buildingIdentifier} geschieht. Um eine solche Charakterisierung der Gebäude zu erhalten, muss jedem Gebäude eine Region in Heidelberg zugeordnet werden. Dazu wird eine weitere Klasse \textsf{UHDCampusRegion} erstellt, die jedem Gebäude eine solche \textsf{region} zuorndet. Um weiterhin zwischen Gebäuden verschiedener Fakultäten oder auch Verwaltungsgebäuden zu unterscheiden, wird eine weitere Klasse \textsf{UHDLocationCategory} erstellt, die jedem Objekt der Klasse \textsf{UHDBuilding} eine \textsf{category} zuordnet.
+Zunächst ist klar, dass Gebäude als eine eigenständige Klasse implementiert werden müssen. Da jedes Gebäude einen Ort zugewiesen bekommt, welcher in der Karte durch eine Annotation eingefügt wird, muss das \objc{MKAnnotation}-\emph{Protokoll} implementiert werden. Dazu wird die Klasse \objc{UHDRemoteManagedLocation} erstellt. Diese ordnet jedem Gebäude verschiedene Eigenschaften, wie eben den Ort, aber auch einen \emph{Titel} und eine \emph{Kategorie} aus der später erläuterten Klasse \objc{UHDLocationCategory} zu. Die Gebäude selbst werden in der Klasse \objc{UHDBuilding} implementiert, welche zusätlich jedem Gebäude zusätzlich ein Bild und eine \objc{campusRegion} zuweist. Weiterhin wird jedem Objekt der Klasse ein \objc{identifier} übergeben, welcher den Titel richtig zusammensetzt. Dies ist darin begründet, dass beispielsweise Gebäude im Neuenheimer Feld alle den Zusatz \emph{INF} tragen, sodass dem Gebäude nur eine \objc{buildingNumber} zugeordnet werden muss. Der eigentliche \objc{title} des Gebäudes setzt sich dann aus beiden Teilen zusammen, was aufgrund der überschriebenen Getter-Methode des Identifiers geschieht:
+
+\begin{objclst}
+- (NSString *)identifier {
+    return [NSString stringWithFormat:@"%@ %@", self.campusRegion.identifier, self.buildingNumber];
+}
+\end{objclst}
+
+\noindent Um eine solche Charakterisierung der Gebäude zu erhalten, muss jedem Gebäude eine Region in Heidelberg zugeordnet werden. Dafür wird eine weitere Klasse \objc{UHDCampusRegion} erstellt, die es ermöglicht jedem Gebäude eine solche \objc{campusRegion} zuzuornden. Auch jede \objc{campusRegion} hat einen eigenen Identifier, welcher in der oben beschriebenen Getter-Methode für den Identifier der \objc{UHDBuilding}-\emph{Klasse} zu einem zusammengesetzten String übergeben wird. Damit erhält man also entweder mit dem Identifier \objc{INF} für das Neuenheimer Feld als eine \objc{campusRegion} und einer Gebäudenummer, z.B. \objc{227}, den \objc{building.indetifier} \objc{INF 227} oder im Falle der Altstadt mit dem Identifier \objc{Altstadt} den gleichen Identifier für das Gebäude selbst. Durch einen \objc{NSMutableSet} können einer \objc{campusRegion} mehrere Gebäude hinzugefügt werden. Die Klasse \objc{UHDCampusRegion} implementiert zudem das \objc{MKOverlay}-\emph{Protokoll}, welches später für die Kartenansicht im View interessant wird. Damit kann eigenes Kartenmaterial, wie die Lagekarten der Universität Heidelberg, über die eigentlich Map gelegt werden, um somit die Gebäude der Universiät hervorzuheben. Um weiterhin zwischen Gebäuden verschiedener Fakultäten oder auch Verwaltungsgebäuden zu unterscheiden, wird eine weitere Klasse \objc{UHDLocationCategory} erstellt, die jedem Objekt der Klasse \objc{UHDBuilding} eine \objc{category} zuordnet. Dadurch kann man beispielsweise im \objc{UHDMapsSearchTableViewController}, welcher in Abschnitt \ref{subsection_1} behandelt wird, speziell nach Gebäuden einer Fakultät suchen oder in der MapView sich nur Gebäude einer bestimmten Kategorie ansehen. 
 
 \subsection{Implementierungsdateien}
 
-\begin{objclst}
+\subsubsection{UHDRemoteManagedLocation.h}
 
-\end{objclst}
+\lstinputlisting{Model/UHDRemoteManagedLocation.h}
 
+\vspace{0,5cm}
+
+\subsubsection{UHDRemoteManagedLocation.m}
+
+\lstinputlisting{Model/UHDRemoteManagedLocation.m}
+
+\vspace{0,5cm}
+
+\subsubsection{UHDBuilding.h}
+
+\lstinputlisting{Model/UHDBuilding.h}
+
+\vspace{0,5cm}
+
+\subsubsection{UHDBuilding.m}
+
+\lstinputlisting{Model/UHDBuilding.m}
+\newpage
+\subsubsection{UHDCampusRegion.h}
+
+\lstinputlisting{Model/UHDCampusRegion.h}
+
+\vspace{0,5cm}
+
+\subsubsection{UHDCampusRegion.m}
+\lstinputlisting{Model/UHDCampusRegion.m}
+
+\vspace{0,5cm}
+
+\subsubsection{UHDLocationCategory.h}
+\lstinputlisting{Model/UHDLocationCategory.h}
+
+\vspace{0,5cm}
+
+\subsubsection{UHDLocationCategory.m}
+\lstinputlisting{Model/UHDLocationCategory.m}
+
+\newpage
 
 \section{Darstellung der verschiedenen Views}
 
-Im \textsf{NavigationViewController} kann über den Button \textsf{Campus} die Anzeige der \textsf{MapView} erreicht werden. Dort gibt es zunächst die Option die Karte in verschiedenen Ansichten darzustellen. Es gibt die Wahl zwischen \textsf{Map}, was die Standardarstellung auf der Karte in iOS ist, \textsf{Satellite} oder \textsf{OVERLAY} \textbf{NACHTRAGEN}. In den ersten beiden Optionen werden die einzelnen Gebäude durch Stecknadeln dargestellt. Durch die Auswahl einer solchen Stecknadel erhält man zunächst grundlegende Informationen, wie den Titel, in einer Art Sprechblase angezeigt. Das Tappen auf diese Sprechblase öffnet ein neues Fenester, welches alle Informationen zum Gebäude anzeigt. Die dritte Kartendarstellung ist ein wenig aufwendiger zu implementieren, denn diese ist keine von Apple vorgefertigte Anzeigeoption. Stattdessen wurde dazu aus verschiedenen PDFs der Universität, welches die Gebäude mit Namen anzeigt, benutzt, um ein sogenanntes \emph{Overlay} zu erzeugen. Das heißt über die \textsf{MapView} wurde das PDF gelegt und dort die Koordinaten an bestimmten Fixpunkten eingetragen. Wir haben uns für diese zusätzliche Darstellung entschieden, da sie dem Benutzer einen viel besseren Überblick über die Gebäude der Universität liefert, als die eigentliche Karte in iOS. 
+\begin{figure}[ht]\label{bild_2}
+\centering \rotatebox{0}{\includegraphics[scale=0.15]{Bilder/Bild_1.png}}
+\caption{Ansicht der MapView nach Auswahl des \objc{Campus}-Buttons}
+\end{figure}
 
+Im \objc{NavigationViewController} kann über den Button \objc{Campus} die Anzeige der \objc{MKMapView} erreicht werden. Dort gibt es zunächst die Option die Karte in verschiedenen Ansichten darzustellen. Es gibt die Wahl zwischen \objc{Standard}, was die Standardarstellung der Karte in iOS ist, \objc{Hybrid} oder \objc{Satellite}. In der Klasse \objc{UHDBuildingAnnotationView} werden die Annotations angepasst, das heißt zum einen wird das Auftreten in der Map View durch ein Symbol und die Darstellung der Annotation selbst, beispielsweise mit Bild des Gebäudes oder einem Info-Button zur Weiterleitung auf den \objc{UHDBuildingDetailViewController}, bearbeitet. Die einzelnen Gebäude der Universität werden durch solche Symbole dargestellt \textbf{WELCHE SYMBOLE? BESCHREIBEN? BILD?????}. 
+
+\begin{figure}[ht]\label{bild_3}
+\centering \rotatebox{0}{\includegraphics[scale=0.15]{Bilder/Bild_1.png}}
+\caption{BILDERSATZ: BILD MIT SYMBOLEN UND UHDBuildingDetailView}
+\end{figure}
+
+Durch die Auswahl eines solchen Symbols erhält man zunächst grundlegende Informationen, wie den Titel und die Campus-Zugehörigkeit, in einer Art Sprechblase angezeigt. Das Tappen auf den Info-Button in dieser Sprechblase öffnet ein neues Fenester, welches alle Informationen zum Gebäude anzeigt. Diese Darstellung wird durch den \objc{UHDBuildingDetailViewController} implementiert. Zu den von Apple bereitgestellten Kartenansichten, lässt sich die MapView, wie bereits im vorherigen Kapitel angesprochen, durch ein sogenanntes Overlay modifizieren. Diese Kartendarstellung ist ein wenig aufwendiger zu implementieren, denn diese ist keine von Apple vorgefertigte Anzeigeoption. Stattdessen wurde dazu aus verschiedenen Lagekarten der Universität im PDF-Format, welches die Gebäude in verschiedenen Farben und mit Namen anzeigt, benutzt, um ein solches \emph{Overlay} zu erzeugen. Das heißt über die \objc{MapView} wurde das PDF gelegt und dort die Mitte mit der Property \objc{coordinate} bestehend aus \objc{centerLatitude} und \objc{centerLongitude} (siehe \objc{UHDCampusRegion.m}) als Fixpunkt gewählt. Durch Bestimmung der Breite \objc{deltaLongitude} und der Höhe \objc{deltaLatitude} des PDFs in geographischen Koordinaten konnte das \objc{boundingMapRect} konfiguriert werden und dadurch die genaue Position des Overlays eingestellt werden. 
+
+\begin{figure}[ht]\label{bild_4}
+\centering \rotatebox{0}{\includegraphics[scale=0.45]{Bilder/Bild_2.1.png}}
+\caption{Overlay anhand des Beispiels Neuenheimer Feld (Der Pin stellt die Mitte dar)}
+\end{figure}
+
+Wir haben uns für diese zusätzliche Darstellung entschieden, da sie dem Benutzer einen viel besseren Überblick über die Gebäude der Universität liefert, als die eigentliche Karte in iOS. Um das Overlay korrekt darzustellen, wurde die Klasse \objc{UHDCampusRegionRender} implementiert, in der das Overlayimage dem View übergeben wird und durch die Methode \objc{- (void)drawMapRect: zoomScale: inContext:} in die jeweilige Region der MapView gelegt wird. {\red Weiterhin haben wir uns gedacht, dass der Nutzer am besten selbst entscheiden sollte, ob er das Overlay benutzen möchte oder nicht. Dazu befindet sich in Bild \ref{bild_4} oben links ein Button, durch den ein Slide von unten hineinkommt und dem Benutzer einige Einstellmöglichkeiten bietet. Hierbei wurde ein sogenannter \objc{Switch} eingefügt, mit dem das Overlay ein und ausgeschalten werden kann. Entscheidet sich also der Nutzer dazu, dass er die Map lieber ohne das Overlay benutzen möchte, dann kann er einfach immer diesen Schalter in der deaktivierende Position belassen. }
+
+\begin{figure}[ht]\label{bild_5}
+\centering \rotatebox{0}{\includegraphics[scale=0.15]{Bilder/Bild_1.png}}
+\caption{\textbf{BILD ZUR FUNKTIONSÜBERSICHT!!!!}}
+\end{figure}
+
+{\red \textbf{BESCHREIBUNG ZUR WEITEREN FUNKTIONSÜBERSICHT!!!}}
+
+a
+
+a
+
+a
+
+a
+
+a
+
+a
+
+a
+
+a
+
+a
+
+a
+
+
+a
+
+
+a
+
+
+a
+
+Drückt man in Bild \ref{bild_5} auf den oberen rechten Button mit dem Lupensymbol, so kommt man zunächst zum \objc{UHDMapsSearchTableViewController}, in dem einzelne Gebäude nach Kategorien geordnet dargestellt werden.
+
+\begin{figure}[ht]\label{bild_6}
+\centering \rotatebox{0}{\includegraphics[scale=0.2]{Bilder/Bild_5.png}}
+\caption{\objc{UHDMapsSearchTableViewController} mit Beispiel Daten}
+\end{figure}
+
+Dort wurde mit Hilfe einer \objc{UISearchBar} eine Suchfunktion integriert, bei dem nach bestimmten Gebäuden oder auch Gebäuden einer Fakultät gesucht werden kann. Zudem wurde die \objc{UITableView} in \objc{sections} unterteilt, welche die Gebäude einer Kategorie zusammenfasst. Mit einem Tap auf das gewünschte Gebäude kommt man auf die \objc{UHDBuildingDetailView}, wie sie in Bild \ref{bild_3} zu sehen ist. Dort sind alle Informationen über das Gebäude zusammengefasst dargestellt. Hier wird es vermutlich noch zu Erweiterungen hinsichtlich der angezeigten Daten kommen. Wir planen zudem Räume innerhalb der Gebäude, Professoren und Forschungsgruppen am jeweiligen Gebäude aufzulisten.
 
 \section{Implementierung der View Controller}
+
+\subsection{UHDMapsViewController}
+
+\subsection{UHDBuildingDetailViewController}
+
+\subsection{UHDMapsSearchTableViewController} \label{subsection_1}
+
+\subsection{UHDMapsSearchCell+ConfigureForItem}
 
 
 \newpage
