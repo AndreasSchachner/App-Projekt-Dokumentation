@@ -56,14 +56,14 @@ Im Laufe des Semesters habe ich selbst in der Erstellung des Data Models für da
 
 \section{Data Model}
 
-%\subsection{Beschreibung}
+\subsection{Beschreibung}
 
-\begin{figure}[ht]\label{bild_1}
+\begin{figure}[ht]
 \centering \rotatebox{0}{\includegraphics[scale=0.5]{Bilder/DataModel.png}}
-\caption{Data Model der Maps}
+\caption{Data Model der Maps}\label{bild_1}
 \end{figure}
 
-Zunächst ist klar, dass Gebäude als eine eigenständige Klasse implementiert werden müssen. Da jedes Gebäude einen Ort zugewiesen bekommt, welcher in der Karte durch eine Annotation eingefügt wird, muss das \objc{MKAnnotation}-\emph{Protokoll} implementiert werden. Annotations haben im Deutschen die Bedeutung \emph{Anmerkung} und erfüllen den Zweck Metadaten in den Quelltext der App zu integrieren, in unserem Fall die Location des Gebäudes. Dies wird für den \objc{UHDMapsViewController} in Abschnitt \ref{subsection_2} wichtig werden, da dort eine \objc{MKMapView} implementiert wird, auf der die gewünschten Gebäude angemerkt werden sollen, also mit einer Annotation versehen werden. Dazu wird nun die Klasse \objc{UHDRemoteManagedLocation} erstellt, welche gerade das\objc{MKAnnotation}-\emph{Protokoll} implementiert. Diese Klasse ordnet jedem Gebäude verschiedene Eigenschaften, wie den Ort, aber auch einen Titel zu. Die Gebäude selbst werden in der Klasse \objc{UHDBuilding} implementiert, welche jedem Gebäude zusätzlich ein Bild, eine \objc{campusRegion} und eine Kategorie aus der später erläuterten Klasse \objc{UHDLocationCategory} zuweist. Weiterhin wird jedem Objekt der Klasse ein \objc{identifier} übergeben, welcher den Titel richtig zusammensetzt. Dieser wird in Bild \ref{bild_1} nicht dargestellt, da er eine unveränderliche Eigenschaft jedes Gebäudes ist. Diese Art der Implementierung ist sinnvoll, da beispielsweise alle Gebäude im Neuenheimer Feld den Zusatz \emph{INF} tragen, sodass dem Gebäude nur eine \objc{buildingNumber} zugeordnet werden muss. Der eigentliche \objc{title} des Gebäudes setzt sich dann aus beiden Teilen zusammen, was aufgrund der überschriebenen Getter-Methode des Identifiers geschieht:
+Zunächst ist klar, dass Gebäude als eine eigenständige Klasse implementiert werden müssen. Da jedes Gebäude einen Ort zugewiesen bekommt, welcher in der Karte durch eine Annotation eingefügt wird, muss das \objc{MKAnnotation}-\emph{Protokoll} implementiert werden. Annotations haben im Deutschen die Bedeutung \emph{Anmerkung} und erfüllen den Zweck Informationen in die \objc{MKMapView} zu integrieren, in unserem Fall die Location eines Gebäudes. Dies wird für den \objc{UHDMapsViewController} in Abschnitt \ref{subsection_2} wichtig werden, da dort eine \objc{MKMapView} implementiert wird, auf der die gewünschten Gebäude angemerkt werden sollen, also mit einer Annotation versehen werden. Dazu wird nun die Klasse \objc{UHDRemoteManagedLocation} erstellt, welche gerade das \objc{MKAnnotation} Protokoll implementiert. Diese Klasse ist hauptsächlich eine gemeinsame Superklasse aller Klassen im Maps Modul, die einen bestimmten Ort repräsentieren und stellt eine default-Implementierung des \objc{MKAnnotation} Protokolls zur Verfügung. Außerdem ist \objc{UHDRemoteManagedLocation} eine Subklasse von \objc{UHDRemoteManagedObject}, daher hat sie auch das \objc{remoteObjectId} Attribut, welches der Identifizierung von Objekten beim Abgleich mit dem Server dient. Die Gebäude selbst werden in der Subklasse \objc{UHDBuilding} von \objc{UHDRemoteManagedLocation} implementiert, welche jedem Gebäude zusätzlich ein Bild, eine \objc{campusRegion} und eine Kategorie aus der später erläuterten Klasse \objc{UHDLocationCategory} zuweist. Weiterhin besitzt jedes Objekt der Klasse einen \objc{identifier}, eine \emph{Computed Property}, welche den Titel richtig zusammensetzt. Dieser wird in Bild \ref{bild_1} nicht dargestellt, da er eine unveränderliche Eigenschaft jedes Gebäudes ist. Diese Art der Implementierung ist sinnvoll, da beispielsweise alle Gebäude im Neuenheimer Feld den Zusatz \emph{INF} tragen, sodass dem Gebäude nur eine \objc{buildingNumber} zugeordnet werden muss. Der eigentliche \objc{title} des Gebäudes setzt sich dann aus beiden Teilen zusammen, was aufgrund der überschriebenen Getter-Methode des Identifiers geschieht:
 
 \begin{objclst}
 - (NSString *)identifier {
@@ -71,46 +71,175 @@ Zunächst ist klar, dass Gebäude als eine eigenständige Klasse implementiert w
 }
 \end{objclst}
 
-\noindent Um eine solche Charakterisierung der Gebäude durchzuführen, muss jedem Gebäude eine Region in Heidelberg zugeordnet werden, welche um größten Teil dem jeweiligen Campus entspricht. Dafür wird eine weitere Klasse \objc{UHDCampusRegion} erstellt, die es ermöglicht jedem Gebäude eine solche \objc{campusRegion} zuzuordnen. Auch jede \objc{campusRegion} hat einen eigenen Identifier, welcher in der oben beschriebenen Getter-Methode für den Identifier der \objc{UHDBuilding}-\emph{Klasse} zu einem zusammengesetzten String übergeben wird. Damit erhält man also beispielsweise mit dem Identifier \objc{INF} für das Neuenheimer Feld als eine \objc{campusRegion} und einer Gebäudenummer, z.B. \objc{227}, den \objc{building.indetifier} \objc{INF 227}. Im Falle der Altstadt mit dem Identifier \objc{Altstadt} entspricht dieser dem Identifier für das Gebäude selbst. Somit kann der Benutzer zum Beispiel im \objc{UHDBuildingDetailView} direkt sehen, in welchem Bereich von Heidelberg das ausgewählte Gebäude liegt. Durch einen \objc{NSMutableSet} können einer \objc{campusRegion} mehrere Gebäude hinzugefügt werden. Die Klasse \objc{UHDCampusRegion} implementiert zudem das \objc{MKOverlay}-\emph{Protokoll}, welches später für die zusätzliche Kartenansicht in der View interessant wird. Damit kann eigenes Kartenmaterial, wie die Lagekarten der Universität Heidelberg, über die eigentliche Map gelegt werden, um somit die Gebäude der Universität hervorzuheben. Da Objekte der Klasse \objc{UHDCampusRegion} ähnlich wie diejenigen aus \objc{UHDBuilding} einen Ort zugewiesen bekommen, welcher für eine \objc{campusRegion} allerdings dem Mittelpunkt entspricht, werden beide Klassen als Subklassen von \objc{UHDRemoteManagedLocation} implementiert. Um weiterhin zwischen Gebäuden verschiedener Fakultäten oder auch Verwaltungsgebäuden zu unterscheiden, wird eine weitere Klasse \objc{UHDLocationCategory} erstellt, die jedem Objekt der Klasse \objc{UHDBuilding} eine \objc{category} zuordnet. Dadurch kann man beispielsweise im \objc{UHDMapsSearchTableViewController}, welcher in Abschnitt \ref{subsection_1} behandelt wird, speziell nach Gebäuden einer Fakultät suchen oder sich nur Gebäude einer bestimmten Kategorie ansehen. 
+\noindent Um eine solche Charakterisierung der Gebäude durchzuführen, muss jedem Gebäude eine Region in Heidelberg zugeordnet werden, welche zum größten Teil dem jeweiligen Campus entspricht. Dafür wird eine weitere Klasse \objc{UHDCampusRegion} erstellt, die es ermöglicht jedem Gebäude eine solche \objc{campusRegion} zuzuordnen. Auch jede \objc{campusRegion} hat einen eigenen Identifier, welcher in der oben beschriebenen Getter-Methode für den Identifier der \objc{UHDBuilding} Klasse zu einem zusammengesetzten String übergeben wird. Damit erhält man also beispielsweise mit dem Identifier \objc{INF} für das Neuenheimer Feld als eine \objc{campusRegion} und einer Gebäudenummer, z.B. \objc{227}, den \objc{building.indetifier} \objc{INF 227}. Im Falle der Altstadt mit dem Identifier \objc{ALT} entspricht dieser dem Identifier für das Gebäude selbst, da keine \objc{buildingNumber} zugeordnet werden muss. Somit kann der Benutzer zum Beispiel im \objc{UHDBuildingDetailView} direkt sehen, in welchem Bereich von Heidelberg das ausgewählte Gebäude liegt. Durch einen \emph{To-Many-Relationship} \objc{NSMutableSet} können einer \objc{campusRegion} mehrere Gebäude hinzugefügt werden. Die Klasse \objc{UHDCampusRegion} implementiert zudem das \objc{MKOverlay} Protokoll, welches später für die zusätzliche Kartenansicht in der View interessant wird. Damit kann eigenes Kartenmaterial, wie die Lagekarten der Universität Heidelberg, über die eigentliche Map gelegt werden, um somit die Gebäude der Universität hervorzuheben. Da Objekte der Klasse \objc{UHDCampusRegion} ähnlich wie diejenigen aus \objc{UHDBuilding} einen Ort zugewiesen bekommen, welcher für eine \objc{campusRegion} allerdings dem Mittelpunkt entspricht, werden beide Klassen als Subklassen von \objc{UHDRemoteManagedLocation} implementiert. Um weiterhin zwischen Gebäuden verschiedener Fakultäten oder auch Verwaltungsgebäuden zu unterscheiden, wird eine weitere Klasse \objc{UHDLocationCategory} erstellt, die jedem Objekt der Klasse \objc{UHDBuilding} eine \objc{category} zuordnet. Dadurch kann man beispielsweise im \objc{UHDMapsSearchTableViewController}, welcher in Abschnitt \ref{subsection_1} behandelt wird, speziell nach Gebäuden einer Fakultät suchen oder sich nur Gebäude einer bestimmten Kategorie ansehen. 
+
+\newpage
+
+\subsection{Klassendeklarationen}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDRemoteManagedLocation.h}}
+
+\begin{objclst}
+#import "UHDRemoteManagedObject.h"
+
+
+@interface UHDRemoteManagedLocation : UHDRemoteManagedObject <MKAnnotation>
+
+@property (nonatomic, retain) NSString *title;
+@property (nonatomic, retain) CLLocation *location;
+
+@end
+\end{objclst}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDBuilding.h}}
+
+\begin{objclst}
+#import "UHDRemoteManagedLocation.h"
+
+@class UHDLocationCategory, UHDCampusRegion;
+
+@interface UHDBuilding : UHDRemoteManagedLocation
+
+@property (nonatomic, retain) UHDLocationCategory *category;
+@property (nonatomic, retain) UHDCampusRegion *campusRegion;
+@property (nonatomic, retain) NSDictionary *addressDictionary;
+@property (nonatomic, retain) NSString *buildingNumber;
+@property (nonatomic, retain) NSData *imageData;
+
+// Computed Properties
+@property (readonly) NSString *campusIdentifier; // calculated by combining the campus region's identifier and the building number
+@property (nonatomic) UIImage *image;
+
+@end
+\end{objclst}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDCampusRegion.h}}
+
+\begin{objclst}
+#import "UHDRemoteManagedLocation.h"
+#import "VIImageOverlayRenderer.h"
+
+@interface UHDCampusRegion : UHDRemoteManagedLocation <VIImageOverlay>
+
+@property (nonatomic, retain) NSString *identifier;
+@property (nonatomic, retain) NSSet *buildings;
+@property (nonatomic, retain) NSURL *overlayImageURL;
+@property (nonatomic) double_t overlayAngle;
+@property (nonatomic) double_t spanLatitude;
+@property (nonatomic) double_t spanLongitude;
+
+// Computed Properties
+- (MKCoordinateRegion)coordinateRegion;
+- (UIImage *)overlayImage;
+
+// Mutable To-Many Accessors
+- (NSMutableSet *)mutableBuildings;
+
+@end
+\end{objclst}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDLocationCatergory.h}}
+
+\begin{objclst}
+#import "UHDRemoteManagedObject.h"
+
+@interface UHDLocationCategory : UHDRemoteManagedObject 
+
+@property (nonatomic, retain) NSString *title;
+@property (nonatomic, retain) NSSet *buildings;
+
+- (NSMutableSet *)mutableBuildings;
+
+@end
+\end{objclst}
 
 \newpage
 
 \section{Darstellung der verschiedenen Views}
 
-\begin{figure}[ht]\label{bild_2}
-\centering \rotatebox{0}{\includegraphics[scale=0.13]{Bilder/Bild_1.png}}
-\caption{Ansicht der MapView nach Auswahl des \objc{Campus}-Buttons}
+\subsection{Beschreibung}
+
+\begin{figure}[ht]
+\centering \rotatebox{0}{\includegraphics[scale=0.11]{Bilder/Bild_1.png}}
+\caption{Ansicht der MapView nach Auswahl des \objc{Campus}-Buttons}\label{bild_2}
 \end{figure}
 
-Im \objc{NavigationViewController} kann über den Button \objc{Campus} die Anzeige der \objc{MKMapView} erreicht werden. Zunächst befindet sich in der oberen linken Ecke ein Button in der Form einer Kompassnadel. Mit Hilfe dieses Buttons kann der Benutzer seine eigene Position anzeigen lassen und durch zweifaches Drücken die Ausrichtung seinen mobilen Geräts bestimmen. In der MapView werden einzelne Gebäude durch sogenannte \emph{Annotations} gekennzeichnet. Diese haben den Zweck bestimmte Orte auf der \objc{mapView} auszuzeichnen. In der Klasse \objc{UHDBuildingAnnotationView} werden die Annotations angepasst, das heißt zum einen wird das Auftreten in der Map View durch ein Symbol und die Darstellung der Annotation selbst, beispielsweise mit Bild des Gebäudes oder einem Info-Button zur Weiterleitung auf den \objc{UHDBuildingDetailViewController}, bearbeitet. Die einzelnen Gebäude der Universität werden durch Symbole dargestellt, was hier zunächst nur provisorisch erstellt wurde. Bisher sind wir uns noch nicht sicher, wie wir jedes einzelne Gebäude markieren können, ohne dass dabei die Übersichtlichkeit verloren geht, wie es im folgenden Bild bereits bei nur $4$ solchen Symbolen der Fall ist. 
+Im \objc{NavigationViewController} kann über den Button \objc{Campus} die Anzeige der \objc{MKMapView} erreicht werden. Zunächst befindet sich in der oberen linken Ecke ein Button in der Form einer Kompassnadel. Mit Hilfe dieses Buttons kann der Benutzer seine eigene Position anzeigen lassen und durch zweifaches Tippen die Ausrichtung seines mobilen Geräts bestimmen. In der MapView werden einzelne Gebäude durch sogenannte \emph{Annotations} gekennzeichnet. Diese haben den Zweck bestimmte Orte auf der \objc{mapView} auszuzeichnen. In der Klasse \objc{UHDBuildingAnnotationView} werden die Annotations angepasst, das heißt zum einen wird das Auftreten in der Map View durch ein Symbol und die Darstellung der Annotation selbst, beispielsweise mit Bild des Gebäudes oder einem Info-Button zur Weiterleitung auf den \objc{UHDBuildingDetailViewController}, bearbeitet. Die einzelnen Gebäude der Universität werden durch Symbole dargestellt, was hier zunächst nur provisorisch erstellt wurde. Die Annotations dienen dazu, einzelne Gebäude auszuzeichen, was gerade dann sinnvoll ist, wenn nach diesem Gebäude gesucht wurde. Dies wird durch das runde Symbol in der Karte in Abbildung \ref{bild_3} angezeigt, wobei hier zunächst noch alle Gebäude markiert werden, da die Suchfunktion in der \objc{mapView} noch nicht implementiert wurde. Ebenso werden Gebäude einer bestimmten Kategorie hervorgehoben, wenn ausgewählt werden, indem diese farbig markiert werden, was aber auch noch nicht implementiert wurde.
 
-\begin{figure}[ht]\label{bild_3}
-\centering \rotatebox{0}{\includegraphics[scale=0.42]{Bilder/Bild_4.png}}
-\caption{\objc{AnnotationView} und \objc{UHDBuildingDetailViewController}}
+\begin{figure}[ht]
+\centering \rotatebox{0}{\includegraphics[scale=0.33]{Bilder/Bild_4.png}}
+\caption{\objc{annotationView} und \objc{UHDBuildingDetailViewController}}\label{bild_3}
 \end{figure}
 
-Durch die Auswahl eines solchen Symbols erhält man zunächst grundlegende Informationen, wie den Titel und die Campus-Zugehörigkeit, in einer Art Sprechblase angezeigt. Das Tappen auf den Info-Button in dieser Sprechblase öffnet ein neues Fenster, welches alle Informationen zum Gebäude anzeigt. Diese Darstellung wird durch den \objc{UHDBuildingDetailViewController} implementiert. Zu den von Apple bereitgestellten Kartenansichten, lässt sich die MapView, wie bereits im vorherigen Kapitel angesprochen, durch ein sogenanntes Overlay modifizieren. Diese Kartendarstellung ist ein wenig aufwendiger zu implementieren, denn diese ist keine von Apple vorgefertigte Anzeige Option. Stattdessen wurde dazu aus verschiedenen Lagekarten der Universität im PNG-Format, welches die Gebäude in verschiedenen Farben und mit Namen anzeigt, benutzt, um ein solches Overlay zu erzeugen. Das heißt über die \objc{MapView} wurde das Bild gelegt, indem dort die Mitte mit der Property \objc{coordinate} sowie Höhe und Breite durch \objc{spanLatitude} und \objc{spanLongitude} (siehe \objc{UHDCampusRegion.m}) festgelegt werden. Durch Bestimmung der Breite \objc{spanLongitude} und der Höhe \objc{spanLatitude} des Bildes in geographischen Koordinaten konnte das \objc{boundingMapRect} konfiguriert werden und dadurch die genaue Position des Overlays eingestellt werden. 
+\noindent Durch die Auswahl eines solchen Symbols erhält man zunächst grundlegende Informationen, wie den Titel und die Campus-Zugehörigkeit, in einer Art Sprechblase angezeigt. Das Tippen auf den Info-Button in dieser Sprechblase öffnet ein neues Fenster, welches alle Informationen zum Gebäude anzeigt. Diese Darstellung wird durch den \objc{UHDBuildingDetailViewController} implementiert, welcher noch nicht vollständig ist, da wir derzeit nicht über alle zugänglichen Informationen der einzelnen Gebäuden verfügen. Geplant sind aber weitere kontextabhängige Informationen wie unter anderem Öffnungszeiten, Adresse, Ansprechpartner und eventuell Räume sowie Hörsääle. 
 
-\begin{figure}[ht]\label{bild_4}
-\centering \rotatebox{0}{\includegraphics[scale=0.41]{Bilder/Bild_2.1.png}}
-\caption{Overlay anhand des Beispiels Neuenheimer Feld}
+Zusätzlich zu den von Apple bereitgestellten Kartenansichten, lässt sich die MapView, wie bereits im vorherigen Kapitel angesprochen, durch ein sogenanntes Overlay modifizieren. Diese Kartendarstellung ist ein wenig aufwendiger zu implementieren, denn diese ist keine von Apple vorgefertigte Anzeigeoption. Stattdessen wurde dazu aus verschiedenen Lagekarten der Universität im PNG-Format, welches die Gebäude in verschiedenen Farben und mit Namen anzeigt, benutzt, um ein solches Overlay zu erzeugen. Das heißt über die \objc{MapView} wurde das Bild gelegt, indem dort die Mitte mit der Property \objc{coordinate} sowie Höhe und Breite durch \objc{spanLatitude} und \objc{spanLongitude} festgelegt werden. Durch Bestimmung der Breite \objc{spanLongitude} und der Höhe \objc{spanLatitude} des Bildes in geographischen Koordinaten konnte das \objc{boundingMapRect} konfiguriert werden und dadurch die genaue Position des Overlays eingestellt werden. 
+
+\begin{figure}[ht]
+\centering \rotatebox{0}{\includegraphics[scale=0.35]{Bilder/Bild_2.1.png}}
+\caption{Overlay anhand des Beispiels Neuenheimer Feld}\label{bild_4}
 \end{figure}
 
-Wir haben uns für diese zusätzliche Darstellung entschieden, da sie dem Benutzer einen besseren Überblick über die Gebäude der Universität liefert, als die eigentliche Karte in iOS. Um das Overlay korrekt darzustellen, wurde die Klasse \objc{UHDCampusRegionRender} implementiert, in der das Overlayimage dem View übergeben wird und durch die Methode \objc{- (void)drawMapRect: zoomScale: inContext:} in die jeweilige Region der MapView gelegt wird. Weiterhin haben wir uns gedacht, dass der Nutzer am besten selbst entscheiden sollte, ob er das Overlay benutzen möchte oder nicht. Dazu befindet sich in Bild \ref{bild_4} oben rechts ein Button, durch den ein Slide von unten hineinkommt und dem Benutzer einige Einstellmöglichkeiten bietet. Hierbei wurde ein sogenannter \objc{Switch} eingefügt, mit dem das Overlay ein und ausgeschalten werden kann. Entscheidet sich also der Nutzer dazu, dass er die Map lieber ohne das Overlay benutzen möchte, dann kann er diesen Schalter in der deaktivierenden Position belassen. Bei der Funktionsübersicht gibt es zunächst die Option die Karte in verschiedenen Ansichten darzustellen. Es gibt die Wahl zwischen \objc{Standard}, was die Standarddarstellung der Karte in iOS ist, \objc{Hybrid} oder \objc{Satellit}. Zudem kann jeweils immer zusätzlich das Overlay mit Hilfe des Switch aktiviert beziehungsweise deaktiviert werden. Was wir zu diesem Zeitpunkt noch nicht implementiert haben, ist die Auswahl einzelner Gebäudekategorien. Dies wird später besonders der Übersichtlichkeit dienen, falls man beispielsweise nur Gebäude einer Fakultät suchen möchte.
+Wir haben uns für diese zusätzliche Darstellung entschieden, da sie dem Benutzer einen besseren Überblick über die Gebäude der Universität liefert, als die eigentliche Karte in iOS. Um das Overlay korrekt darzustellen, wurde die Klasse \objc{UHDCampusRegionRender} implementiert, in der das Overlayimage dem View übergeben wird und durch die Methode \objc{- (void)drawMapRect: zoomScale: inContext:} in die jeweilige Region der MapView gelegt wird. Weiterhin haben wir uns gedacht, dass der Nutzer am besten selbst entscheiden sollte, ob er das Overlay benutzen möchte oder nicht. Dazu befindet sich in Bild \ref{bild_4} oben rechts ein Button, mit dem eine Konfigurationsansicht eingeblendet werden und der dem Benutzer einige Einstellmöglichkeiten bietet. Hierbei wurde ein sogenannter \objc{Switch} eingefügt, mit dem das Overlay ein- und ausgeschalten werden kann. Entscheidet sich also der Nutzer dazu, dass er die Map lieber ohne das Overlay benutzen möchte, dann kann er diesen Schalter in der deaktivierenden Position belassen. Bei der Funktionsübersicht gibt es zunächst die Option die Karte in verschiedenen Ansichten darzustellen. Es gibt die Wahl zwischen \objc{Standard}, was die Standarddarstellung der Karte in iOS ist, \objc{Hybrid} oder \objc{Satellit}. Zudem kann jeweils immer zusätzlich das Overlay mit Hilfe des Switch aktiviert beziehungsweise deaktiviert werden. Was wir zu diesem Zeitpunkt noch nicht implementiert haben, ist die Auswahl einzelner Gebäudekategorien. Dies wird später besonders der Übersichtlichkeit dienen, falls man beispielsweise nur Gebäude einer Fakultät suchen möchte.
 
-\begin{figure}[ht]\label{bild_5}
-\centering \rotatebox{0}{\includegraphics[scale=0.15]{Bilder/Bild_3.png}}
-\caption{Vorläufige Dartsellung der Funktionsübersicht}
+\begin{figure}[ht]
+\centering \rotatebox{0}{\includegraphics[scale=0.12]{Bilder/Bild_3.png}}
+\caption{Vorläufige Dartsellung der Funktionsübersicht}\label{bild_5}
 \end{figure}
 
-Die Funktionsübersicht sieht zugegebenermaßen noch etwas spartanisch aus. Allerdings wollten wir zunächst die Funktionen und die wichtigen Ansichten, wie etwa die \objc{mapView}, implementieren und später alles genauer überarbeiten. Drückt man in Bild \ref{bild_5} auf den mittleren Button mit dem Titel \emph{Search}, so kommt man zunächst zum \objc{UHDMapsSearchTableViewController}, in dem einzelne Gebäude nach Kategorien geordnet dargestellt werden.
+Drückt man in Bild \ref{bild_5} auf den mittleren Button mit dem Titel \emph{Search}, so kommt man zunächst zum \objc{UHDMapsSearchTableViewController}, in dem einzelne Gebäude nach Kategorien geordnet dargestellt werden. Die Möglichkeiten der Suche ist eine der wichtigsten Funktionen in diesem Modul. Allerdings ist der derzeitige Plan, das nicht mehr nur als Button zu implementieren sondern mit einer \objc{UISearchBar} in der Navigation Bar. Dadurch können dann ausgewählte Gebäude auf der Karte direkt angezeigt werden. Um dann den \objc{UHDBuildingDetailViewControler} anzuzeigen, bekommt jede einzelne Zelle in der Table View des \objc{UISearchDisplayController} noch so einen Info-Button, analog zu demjenigen in der Navigation Bar oben rechts in Abbildung \ref{bild_2}.
 
-\begin{figure}[ht]\label{bild_6}
-\centering \rotatebox{0}{\includegraphics[scale=0.15]{Bilder/Bild_5.png}}
-\caption{\objc{UHDMapsSearchTableViewController} mit Beispiel Daten}
+\begin{figure}[ht]
+\centering \rotatebox{0}{\includegraphics[scale=0.12]{Bilder/Bild_5.png}}
+\caption{\objc{UHDMapsSearchTableViewController} mit Beispiel Daten}\label{bild_6}
 \end{figure}
 
 Dort wurde mit Hilfe einer \objc{UISearchBar} eine Suchfunktion integriert, bei dem nach bestimmten Gebäuden oder auch Gebäuden einer Fakultät gesucht werden kann. Zudem wurde die \objc{UITableView} in \objc{sections} unterteilt, welche die Gebäude einer Kategorie zusammenfasst. Mit einem Tap auf das gewünschte Gebäude kommt man auf die \objc{UHDBuildingDetailView}, wie sie in Bild \ref{bild_3} zu sehen ist. Dort sind alle Informationen über das Gebäude zusammengefasst dargestellt. Hier wird es vermutlich noch zu Erweiterungen hinsichtlich der angezeigten Daten kommen. Wir planen zudem Räume innerhalb der Gebäude, Professoren und Forschungsgruppen am jeweiligen Gebäude aufzulisten.
+
+\subsection{Klassendeklarationen}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDBuildingAnnotationView.h}}
+
+\begin{objclst}
+#import <MapKit/MapKit.h>
+#import "UHDBuilding.h"
+
+@interface UHDBuildingAnnotationView : MKAnnotationView
+
+@property (strong, nonatomic) UHDBuilding *annotation;
+
+- (id)initWithAnnotation:(UHDBuilding *)annotation reuseIdentifier:(NSString *)reuseIdentifier;
+
+@end
+\end{objclst}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDMapsSearchCell.h}}
+
+\begin{objclst}
+#import <UIKit/UIKit.h>
+
+@interface UHDMapsSearchCell : UITableViewCell
+
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet UILabel *subtitleLabel;
+@property (weak, nonatomic) IBOutlet UIImageView *buildingsImageView;
+
+@end
+\end{objclst}
+
+\newpage
 
 \section{Implementierung der View Controller}
 
@@ -188,7 +317,7 @@ Dazu erhält der \objc{UHDMapsSearchTableViewController} eine \objc{property} de
 }
 \end{objclst}
 
-Hierbei wird unterschieden, ob der Benutzer bestimme Objekte durch Eingabe eines Strings in die \objc{searchBar} sucht oder nur die gesamte Liste benutzt. Dabei wird in Zeile $5$ mit einer \objc{if}-Abfrage überprüft, ob gerade die \objc{searchDisplayController.searchResultTableView} der eigentlichen \objc{TableView} zugewiesen wird. Dann werden mit Hilfe der Zeilen $6$ und $7$ die Zellen mit dem Identifier \objc{@"mapsSearchCell"} eingefügt und jeweils mit einem Item aus dem Array \objc{filteredObjects} versehen. Ist dies nicht der Fall, so werden der \objc{TableView} gerade alle Objekte zugewiesen, indem auf den \objc{fetchedResultsController} zugeriffen wird. Zum Schluss muss noch gewährleistet werden, dass bei der Auswahl eines bestimmten Gebäudes die richtigen Informationen in einem neuen \objc{ViewController} dargestellt werden. Dazu dient der folgende Abschnitt:
+Hierbei wird unterschieden, ob der Benutzer bestimmte Objekte durch Eingabe eines Strings in die \objc{searchBar} sucht oder nur die gesamte Liste benutzt. Dabei wird in Zeile $5$ mit einer \objc{if}-Abfrage überprüft, ob gerade die \objc{searchDisplayController.searchResultTableView} der eigentlichen \objc{TableView} zugewiesen wird. Dann werden mit Hilfe der Zeilen $6$ und $7$ die Zellen mit dem Identifier \objc{@"mapsSearchCell"} eingefügt und jeweils mit einem Item aus dem Array \objc{filteredObjects} versehen. Ist dies nicht der Fall, so werden der \objc{TableView} gerade alle Objekte zugewiesen, indem auf den \objc{fetchedResultsController} zugeriffen wird. Zum Schluss muss noch gewährleistet werden, dass bei der Auswahl eines bestimmten Gebäudes die richtigen Informationen in einem neuen \objc{ViewController} dargestellt werden. Dazu dient der folgende Abschnitt:
 
 \begin{objclst}
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
@@ -214,10 +343,82 @@ Hierbei wird unterschieden, ob der Benutzer bestimme Objekte durch Eingabe eines
 Dabei besteht nur die Schwierigkeit, dass bei einer durchgeführten Suche nicht mehr die Gebäude wie zuvor nach Kategorie und Namen sortiert sind. Deshalb muss sichergestellt werden, dass das richtige Objekt übergeben wird. Dies geschieht in den Zeilen $6$ bis $13$, wobei durch einen Zugriff auf die \objc{searchResultsTableView} die ausgewählte Zelle bestimmt wird. Aus dieser Zelle wird dann also das Objekt genommen und an den \objc{destViewController}, welcher in diesem Falle der \objc{UHDBuildingDetailViewController} ist, übergeben. Damit erhält man also die Ansicht aus Bild \ref{bild_3}.
 
 \newpage
+
+\subsection{Klassendeklarationen}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDMapsViewController.h}}
+
+\begin{objclst}
+@import UIKit;
+@interface UHDMapsViewController : UIViewController
+
+@property (strong, nonatomic) NSManagedObjectContext *managedObjectContext;
+
+@end
+\end{objclst}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDBuildingDetailViewController.h}}
+
+\begin{objclst}
+#import <UIKit/UIKit.h>
+#import "UHDBuilding.h"
+@interface UHDBuildingDetailViewController : UITableViewController
+
+@property (strong, nonatomic) UHDBuilding *building;
+
+@end
+\end{objclst}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDConfigureMapViewController.h}}
+
+\begin{objclst}
+#import <UIKit/UIKit.h>
+@interface UHDConfigureMapViewController : UIViewController
+
+@property (strong, nonatomic) MKMapView *mapView;
+
+@end
+\end{objclst}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDMapsSearchCell+ConfigureForItem.h}}
+
+\begin{objclst}
+#import "UHDMapsSearchCell.h"
+#import "UHDBuilding.h"
+@interface UHDMapsSearchCell (ConfigureForItem)
+
+- (void)configureForItem:(UHDBuilding *)item;
+
+@end
+\end{objclst}
+
+\vspace{0,5cm}
+
+\subsubsection{\objc{UHDMapsSearchTableViewController.h}}
+
+\begin{objclst}
+@import Foundation;
+@import UIKit;
+@interface UHDMapsSearchTableViewController : UITableViewController
+
+@property (strong, nonatomic) NSManagedObjectContext *managedObjectContext;
+
+@end
+\end{objclst}
+
+\newpage
+
 \chapter{Zusammenfassung}
 
-Im letzten Abschnitt wurden nur einzelne Code-Stücke beispielhaft aufgeführt, um verschiedene Methoden in den View Controllern zu beschreiben. Dabei wurde nicht jeder einzelne Implementierungsabschnitt oder ViewController aufgeführt, da dies bei weitem zu umfangreich geworden wäre. Zum Zeitpunkt dieser Dokumentation haben wir einige neue Ideen aufgegriffen, die zu weiteren Veränderungen zur bisherigen Darstellung führen. Wie bereits angemerkt wird die View die Einstellungen der \objc{mapView} betreffend noch überarbeitet und vollständig implementiert. Das heißt wir werden Optionen, wie das Filtern nach bestimmten Kategorien von Objekten, ermöglichen. Weiterhin wird der bisherige \objc{Search}-Button in der Mitte der Navigation Bar entfernt und durch eine Suchleiste ersetzt, damit der Benutzer direkt auf der Startseite nach bestimmten Gebäuden suchen kann. Das wichtigste ist jedoch die optimale Benutzeroberfläche für die \objc{mapView} zu finden, denn einerseits sollen die gewünschten Regionen eindeutig erkennbar sein, aber andererseits sollen dadurch nicht andere Abschnitte überdeckt werden, wie es derzeit durch die runden Symbole der Fall ist. Zuvor hatten wir die üblichen Pins verwendet, was allerdings auch zu einer unübersichtlichen Darstellung führt. Eine zusätzliche Möglichkeit, die wir derzeit in Betracht ziehen, ist das Splitten des Overlays in die verschiedenen Gebäude, so dass jedes Objekt der Klasse \objc{UHDBuilding} eine Region der Grundfläche entsprechend zugewiesen bekommt. Dann könnte Beispielsweise bei der Suche nach einem solchen Gebäude dessen Overlay angezeigt werden, was sich schließlich von allen anderen Gebäuden abhebt. Wir haben noch einiges an Arbeit vor uns, allerdings erkennt man eindeutig die erzielten Ergebnisse. Ich habe jedenfalls große Fortschritte im Programmieren unter Objective-C gemacht und freue mich auch weiterhin am diesem Projekt teilzunehmen.
-
+Im letzten Abschnitt wurden nur einzelne Code-Stücke beispielhaft aufgeführt, um verschiedene Methoden in den View Controllern zu beschreiben. Dabei wurde nicht jeder einzelne Implementierungsabschnitt oder ViewController aufgeführt, da dies bei weitem zu umfangreich geworden wäre. Zum Zeitpunkt dieser Dokumentation haben wir einige neue Ideen aufgegriffen, die zu weiteren Veränderungen der bisherigen Darstellung führen werden. Die View für die Einstellungen der \objc{mapView} betreffend noch überarbeitet und vollständig implementiert. Das heißt wir werden Optionen, wie das Filtern nach bestimmten Kategorien von Objekten, ermöglichen. Weiterhin wird der bisherige \objc{Search}-Button in der Mitte der Navigation Bar entfernt und durch eine Suchleiste ersetzt, damit der Benutzer direkt auf der Startseite nach bestimmten Gebäuden suchen kann. Das wichtigste ist jedoch die optimale Benutzeroberfläche für die \objc{mapView} zu finden, denn einerseits sollen die gewünschten Regionen eindeutig erkennbar sein, aber andererseits sollen dadurch nicht andere Abschnitte überdeckt werden, wie es derzeit durch die runden Symbole der Fall ist. Zuvor hatten wir die üblichen Pins verwendet, was allerdings auch zu einer unübersichtlichen Darstellung führt. Eine zusätzliche Möglichkeit, die wir derzeit in Betracht ziehen, ist das Splitten des Overlays in die verschiedenen Gebäude, so dass jedes Objekt der Klasse \objc{UHDBuilding} eine Region der Grundfläche entsprechend zugewiesen bekommt. Dann könnte beispielsweise bei der Suche nach einem solchen Gebäude dessen Overlay angezeigt werden, was sich schließlich von allen anderen Gebäuden abhebt. Wir haben noch einiges an Arbeit vor uns, allerdings erkennt man eindeutig die erzielten Ergebnisse. Ich habe jedenfalls große Fortschritte im Programmieren unter Objective-C gemacht und freue mich auch weiterhin am diesem Projekt teilzunehmen.
 
 
 \end{document}
